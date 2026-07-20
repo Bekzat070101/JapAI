@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# User data (generated at runtime, may contain personal info)
+progress.json
+history/
+output/
+
+# Dev logs (personal development notes)
+devlog/
+
+# AI assistant config (not needed for end users)
+CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
