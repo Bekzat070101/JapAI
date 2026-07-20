@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 
 # User data (generated at runtime, may contain personal info)
+config.json
 progress.json
 history/
 output/
