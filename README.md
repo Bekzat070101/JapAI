@@ -32,6 +32,9 @@ pip install -r requirements.txt
 ### 4. 启动
 
 ```bash
+# 首次使用：复制配置文件模板
+copy config.example.json config.json
+
 python app.py
 ```
 
