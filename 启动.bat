@@ -33,8 +33,5 @@ echo   Press Ctrl+C to stop
 echo   ==============================
 echo.
 
-REM Open browser after 2 seconds
-start "" cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:5000"
-
 python app.py
 pause

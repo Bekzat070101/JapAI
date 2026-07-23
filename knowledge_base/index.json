@@ -1,0 +1,15 @@
+{
+  "textbooks": [
+    {
+      "id": "standard_jp",
+      "name": "新版中日交流标准日本语",
+      "volumes": [
+        { "id": "beginner_1", "name": "初级上册", "lessons": "第1-24课", "level": "N5", "file": "standard_jp/beginner_1.json" },
+        { "id": "beginner_2", "name": "初级下册", "lessons": "第25-48课", "level": "N4", "file": "standard_jp/beginner_2.json" },
+        { "id": "intermediate_1", "name": "中级上册", "lessons": "第1-16课", "level": "N3", "file": "standard_jp/intermediate_1.json" },
+        { "id": "intermediate_2", "name": "中级下册", "lessons": "第17-32课", "level": "N2", "file": "standard_jp/intermediate_2.json" },
+        { "id": "advanced", "name": "高级上下册", "lessons": "第1-24课", "level": "N1", "file": "standard_jp/advanced.json" }
+      ]
+    }
+  ]
+}

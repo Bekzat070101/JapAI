@@ -1,3 +1,6 @@
+# Environment variables (production secrets)
+.env
+
 # Python
 __pycache__/
 *.pyc
@@ -6,14 +9,21 @@ __pycache__/
 # User data (generated at runtime, may contain personal info)
 config.json
 progress.json
+learned_content.json
+vocabulary.json
+wrong_book.json
+japai.db
 history/
 output/
+license_data/
 
 # Dev logs (personal development notes)
 devlog/
 
-# AI assistant config (not needed for end users)
-CLAUDE.md
+# Build output
+build/
+dist/
+*.spec
 
 # IDE
 .vscode/

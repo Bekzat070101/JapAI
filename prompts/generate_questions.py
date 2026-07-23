@@ -6,7 +6,7 @@
 """
 
 
-def build_generate_questions_prompt(notes: str, level: str, learned_content: list = None, vocab_text: str = "", vocab_bank: list = None) -> str:
+def build_generate_questions_prompt(notes: str, level: str, learned_content: list = None, vocab_text: str = "", vocab_bank: list = None, textbook_vocab: list = None) -> str:
     """构建出题 prompt — 场景化表达，渐进式难度。"""
 
     # JLPT 级别范围说明
@@ -69,6 +69,24 @@ def build_generate_questions_prompt(notes: str, level: str, learned_content: lis
 - 今日单词在词汇提示中**不给出**（让学生自己回忆）
 """
 
+    # 教材单词
+    textbook_section = ""
+    if textbook_vocab and len(textbook_vocab) > 0:
+        words_desc = []
+        for v in textbook_vocab[:200]:  # 最多 200 个避免 prompt 过长
+            w = v.get("word", "")
+            r = v.get("reading", "")
+            m = v.get("meaning", "")
+            words_desc.append(f"  - {w}（{r}）{m}")
+        word_list = "\n".join(words_desc)
+        textbook_section = f"""
+## 📖 教材单词范围（出题必须在此范围内！）
+以下为当前课程的教材单词，出题时**只能使用列表中出现的单词**，不要引入列表外的新词：
+{word_list}
+"""
+        if len(textbook_vocab) > 200:
+            textbook_section += f"\n（仅显示前 200 个，共 {len(textbook_vocab)} 个词）"
+
     # 历史单词库
     vocab_bank_section = ""
     if vocab_bank and len(vocab_bank) > 0:
@@ -95,6 +113,7 @@ def build_generate_questions_prompt(notes: str, level: str, learned_content: lis
 {notes}
 ```
 {learned_section}
+{textbook_section}
 {vocab_section}
 {vocab_bank_section}
 

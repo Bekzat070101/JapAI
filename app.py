@@ -8,7 +8,7 @@ Flask 后端入口
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, request, send_from_directory
 from openai import OpenAI
@@ -24,12 +24,41 @@ from prompts.grade_answer import (
     build_essay_grade_prompt,
 )
 from prompts.generate_summary import build_generate_summary_prompt
-
 # --- 初始化 ---
-app = Flask(__name__, static_folder="static", static_url_path="")
+import sys
+
+# PyInstaller 打包后资源路径处理
+def resource_path(relative_path):
+    """获取资源文件的绝对路径（兼容 PyInstaller 打包）。"""
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
+
+app = Flask(__name__, static_folder=resource_path("static"), static_url_path="")
+# 限制请求体大小为 1MB（防止 DoS / 巨额 API 费用）
+app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024
+
+# 输入验证常量
+MAX_NOTES_LENGTH = 50000      # 笔记最多 5 万字
+MAX_VOCAB_LENGTH = 20000      # 单词最多 2 万字
+MAX_ANSWER_LENGTH = 10000     # 答案最多 1 万字
+MAX_RECORDS_COUNT = 100       # 答题记录最多 100 条
 
 
 # --- 工具函数 ---
+def validate_input(value, max_len, field_name):
+    """验证输入长度，超限返回错误信息。"""
+    if value and len(value) > max_len:
+        return f"{field_name}过长（最大 {max_len} 字）"
+    return None
+
+def sanitize_date(date_str):
+    """验证日期格式为 YYYY-MM-DD，防止路径穿越。"""
+    import re
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+        return None
+    return date_str
+
 def load_json(filepath, default=None):
     """安全加载 JSON 文件，文件不存在时返回默认值。"""
     if default is None:
@@ -53,12 +82,26 @@ def save_json(filepath, data):
 
 
 def get_deepseek_client():
-    """获取 DeepSeek API 客户端。"""
-    config = load_json("config.json")
-    api_key = config.get("api_key", "")
+    """获取 DeepSeek API 客户端。
+    优先使用环境变量 DEEPSEEK_API_KEY（生产环境），
+    其次读取 config.json（本地开发）。"""
+    # 优先读环境变量（服务器部署用）
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    model = os.environ.get("DEEPSEEK_MODEL", "")
+
+    # 环境变量未设置时，回退到 config.json（本地开发用）
+    if not api_key:
+        config = load_json("config.json")
+        api_key = config.get("api_key", "")
+        if not model:
+            model = config.get("model", "deepseek-chat")
+
     if not api_key:
         return None, "API Key 未设置"
-    model = config.get("model", "deepseek-chat")
+
+    if not model:
+        model = "deepseek-chat"
+
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
     return client, model
 
@@ -105,17 +148,18 @@ def index():
 def handle_config():
     if request.method == "GET":
         config = load_json("config.json")
-        # 返回时隐藏完整 API Key（只显示前4后4位）
+        # 读取 API Key
         api_key = config.get("api_key", "")
         masked = ""
         if len(api_key) > 8:
             masked = api_key[:4] + "****" + api_key[-4:]
+        model = os.environ.get("DEEPSEEK_MODEL", "") or config.get("model", "deepseek-chat")
         return jsonify({
             "api_key": api_key,
             "api_key_masked": masked,
             "has_api_key": bool(api_key),
             "level": config.get("level", "N4"),
-            "model": config.get("model", "deepseek-chat"),
+            "model": model,
         })
     else:  # POST
         data = request.get_json(silent=True) or {}
@@ -137,9 +181,16 @@ def generate_questions():
     notes = data.get("notes", "").strip()
     level = data.get("level", "N4")
     vocab_text = data.get("vocabulary", "").strip()
+    textbook_vocab = data.get("textbook_vocab", [])  # 教材单词
 
     if not notes:
         return jsonify({"error": "笔记内容不能为空"}), 400
+
+    # 输入长度验证
+    err = validate_input(notes, MAX_NOTES_LENGTH, "笔记内容")
+    if err: return jsonify({"error": err}), 400
+    err = validate_input(vocab_text, MAX_VOCAB_LENGTH, "单词内容")
+    if err: return jsonify({"error": err}), 400
 
     # 读取已学内容
     learned = load_json("learned_content.json")
@@ -149,7 +200,10 @@ def generate_questions():
     vocab_bank = load_json("vocabulary.json")
     vocab_words = vocab_bank.get("words", [])
 
-    prompt = build_generate_questions_prompt(notes, level, learned_items, vocab_text, vocab_words)
+    prompt = build_generate_questions_prompt(
+        notes, level, learned_items, vocab_text, vocab_words,
+        textbook_vocab=textbook_vocab,
+    )
     response_text = call_deepseek(prompt, require_json=True)
 
     if response_text is None:
@@ -224,6 +278,8 @@ def grade_essay():
 
     if not user_answer:
         return jsonify({"error": "答案不能为空"}), 400
+    err = validate_input(user_answer, MAX_ANSWER_LENGTH * 3, "答案")
+    if err: return jsonify({"error": err}), 400
 
     prompt = build_essay_grade_prompt(essay_question, user_answer, level)
     response_text = call_deepseek(prompt, require_json=True)
@@ -302,6 +358,8 @@ def grade_answer():
     # --- 正常批改：必须有答案 ---
     if not user_answer:
         return jsonify({"error": "答案不能为空"}), 400
+    err = validate_input(user_answer, MAX_ANSWER_LENGTH, "答案")
+    if err: return jsonify({"error": err}), 400
 
     # 正常批改
     prompt = build_grade_answer_prompt(question, user_answer, level)
@@ -341,6 +399,8 @@ def generate_summary():
 
     if not records:
         return jsonify({"error": "没有答题记录"}), 400
+    if len(records) > MAX_RECORDS_COUNT:
+        return jsonify({"error": "答题记录数异常"}), 400
 
     prompt = build_generate_summary_prompt(notes, level, records, vocab_used)
     response_text = call_deepseek(prompt, require_json=False)
@@ -430,17 +490,61 @@ def handle_learned_content():
                 old["last_reviewed"] = today
                 if new_item.get("level"):
                     old["level"] = new_item["level"]
+
+                # --- 艾宾浩斯 SM-2 调度 ---
+                quality = min(5, max(0, int(new_score / 2)))  # 0-10 → 0-5
+                old_stage = old.get("review_stage", 0)
+                history = old.get("history_scores", [])
+                history.append(new_score)
+                old["history_scores"] = history[-10:]  # 保留最近10次
+
+                intervals = [1, 2, 4, 7, 15, 30]
+                if quality >= 3:
+                    # 答对：推进阶段
+                    new_stage = min(old_stage + 1, len(intervals) - 1)
+                else:
+                    # 答错：回退一个阶段
+                    new_stage = max(0, old_stage - 1)
+
+                old["review_stage"] = new_stage
+                old["review_interval"] = intervals[new_stage]
+
+                # 计算下次复习日期
+                from datetime import date, timedelta
+                next_date = date.today() + timedelta(days=intervals[new_stage])
+                old["next_review"] = next_date.isoformat()
             else:
                 new_item["first_learned"] = today
                 new_item["last_reviewed"] = today
                 new_item["review_count"] = 1
                 new_item["mastery"] = round(new_score / 10, 2)
+                # 初始化复习字段
+                new_item["review_stage"] = 0
+                new_item["review_interval"] = 1
+                new_item["history_scores"] = [new_score]
+                from datetime import date, timedelta
+                new_item["next_review"] = (date.today() + timedelta(days=1)).isoformat()
                 existing_map[gp] = new_item
 
         learned["items"] = list(existing_map.values())
         save_json("learned_content.json", learned)
 
         return jsonify({"success": True, "count": len(learned["items"])})
+
+
+# --- 复习到期检测 ---
+@app.route("/api/review_due", methods=["GET"])
+def get_review_due():
+    """返回今日到期的复习语法点。"""
+    learned = load_json("learned_content.json")
+    items = learned.get("items", [])
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    due = [item for item in items if item.get("next_review", "2099-12-31") <= today]
+    # 按掌握度从低到高排序，薄弱点优先复习
+    due.sort(key=lambda x: x.get("mastery", 1.0))
+
+    return jsonify({"due": due, "total": len(items)})
 
 
 # --- 单词库管理 ---
@@ -490,6 +594,85 @@ def handle_vocabulary():
         return jsonify({"success": True, "count": len(vocab["words"])})
 
 
+# --- 教材知识库 ---
+@app.route("/api/knowledge_base", methods=["GET"])
+def list_textbooks():
+    """返回教材列表和课程索引。"""
+    index = load_json("knowledge_base/index.json")
+    return jsonify(index)
+
+
+@app.route("/api/knowledge_base/<volume_id>", methods=["GET"])
+def get_textbook_volume(volume_id):
+    """加载指定教材分册的全部课程数据。"""
+    index = load_json("knowledge_base/index.json")
+    file_path = None
+    for textbook in index.get("textbooks", []):
+        for vol in textbook.get("volumes", []):
+            if vol["id"] == volume_id:
+                file_path = vol["file"]
+                break
+
+    if not file_path:
+        return jsonify({"error": "教材不存在"}), 404
+
+    full_path = os.path.join("knowledge_base", file_path)
+    data = load_json(full_path, None)
+    if data is None:
+        return jsonify({"error": "教材文件不存在或格式错误"}), 404
+    return jsonify(data)
+
+
+# --- 错题本 ---
+@app.route("/api/wrong_book", methods=["GET"])
+def list_wrong_book():
+    """获取错题本全部条目。"""
+    wb = load_json("wrong_book.json")
+    items = wb.get("items", [])
+    # 按添加时间倒序，未掌握的排前面
+    items.sort(key=lambda x: (x.get("mastered", False), x.get("added_at", "")), reverse=False)
+    return jsonify({"items": items})
+
+
+@app.route("/api/wrong_book", methods=["POST"])
+def update_wrong_book():
+    """新增或更新错题条目。"""
+    data = request.get_json(silent=True) or {}
+    new_items = data.get("items", [])
+    if not new_items:
+        return jsonify({"error": "没有要更新的内容"}), 400
+
+    wb = load_json("wrong_book.json")
+    existing = wb.get("items", [])
+    existing_map = {item.get("id"): item for item in existing}
+
+    for new_item in new_items:
+        item_id = new_item.get("id")
+        if item_id in existing_map:
+            # 更新已有条目
+            old = existing_map[item_id]
+            old["reviewed_count"] = new_item.get("reviewed_count", old.get("reviewed_count", 0))
+            old["last_reviewed"] = new_item.get("last_reviewed", old.get("last_reviewed"))
+            old["score"] = new_item.get("score", old.get("score", 0))
+            old["mastered"] = new_item.get("mastered", old.get("mastered", False))
+        else:
+            existing_map[item_id] = new_item
+
+    wb["items"] = list(existing_map.values())
+    save_json("wrong_book.json", wb)
+    return jsonify({"success": True, "count": len(wb["items"])})
+
+
+@app.route("/api/wrong_book/<int:item_id>", methods=["DELETE"])
+def delete_wrong_item(item_id):
+    """删除某个错题条目（标记为已掌握时调用）。"""
+    wb = load_json("wrong_book.json")
+    items = wb.get("items", [])
+    wb["items"] = [i for i in items if i.get("id") != item_id]
+    save_json("wrong_book.json", wb)
+    return jsonify({"success": True})
+
+
 # --- 历史记录 ---
 @app.route("/api/history", methods=["GET"])
 def list_history():
@@ -514,6 +697,9 @@ def list_history():
 
 @app.route("/api/history/<date>", methods=["GET"])
 def get_history_detail(date):
+    date = sanitize_date(date)
+    if not date:
+        return jsonify({"error": "日期格式无效"}), 400
     filepath = os.path.join("history", f"{date}.json")
     data = load_json(filepath, None)
     if data is None:
@@ -524,6 +710,9 @@ def get_history_detail(date):
 @app.route("/api/download/<date>", methods=["GET"])
 def download_markdown(date):
     """下载复习笔记 Markdown 文件。"""
+    date = sanitize_date(date)
+    if not date:
+        return jsonify({"error": "日期格式无效"}), 400
     md_filename = f"review_{date}.md"
     md_path = os.path.join("output", md_filename)
     if not os.path.exists(md_path):
@@ -545,11 +734,55 @@ def download_markdown(date):
     )
 
 
+@app.route("/api/checkin", methods=["GET"])
+def get_checkin():
+    """返回打卡数据：活跃日期列表、连续天数、本月天数。"""
+    history_dir = "history"
+    if not os.path.exists(history_dir):
+        return jsonify({"dates": [], "streak": 0, "monthly_count": 0, "monthly_dates": []})
+
+    dates = []
+    for f in os.listdir(history_dir):
+        if f.endswith(".json"):
+            date_str = f.replace(".json", "")
+            if len(date_str) == 10:  # YYYY-MM-DD
+                dates.append(date_str)
+
+    dates.sort()
+    date_set = set(dates)
+
+    # 计算连续打卡天数（从今天往前数）
+    streak = 0
+    check = datetime.now()
+    # 如果今天还没打卡，从昨天开始算
+    if datetime.now().strftime("%Y-%m-%d") not in date_set:
+        check = datetime.now() - timedelta(days=1)
+
+    while check.strftime("%Y-%m-%d") in date_set:
+        streak += 1
+        check = check - timedelta(days=1)
+
+    # 本月打卡天数
+    current_month = datetime.now().strftime("%Y-%m")
+    monthly_dates = [d for d in dates if d.startswith(current_month)]
+
+    return jsonify({
+        "dates": dates,
+        "streak": streak,
+        "monthly_count": len(monthly_dates),
+        "monthly_dates": monthly_dates,
+    })
+
+
 # --- 启动 ---
 if __name__ == "__main__":
+    import webbrowser
+    from threading import Timer
     print("=" * 50)
     print("  JapAI — 日语语法闯关练习工具")
     print("  启动地址: http://127.0.0.1:5000")
     print("  按 Ctrl+C 停止服务")
     print("=" * 50)
+    # 1.5 秒后自动打开浏览器
+    Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
     app.run(host="127.0.0.1", port=5000, debug=False)

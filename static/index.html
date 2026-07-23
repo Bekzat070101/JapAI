@@ -7,356 +7,387 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- 高级动效 -->
+    <script src="effects.js"></script>
 </head>
 <body>
 
-<!-- 页面容器 -->
 <div id="app" class="app-container">
 
-    <!-- ==================== 屏幕 0：加载遮罩 ==================== -->
-    <div id="screen-loading" class="screen loading-overlay" style="display: none;">
+    <!-- ==================== Dock 导航栏 ==================== -->
+    <div class="dock-container" id="dock-bar">
+        <div class="dock-panel" id="dock-panel">
+            <div class="dock-item" data-screen="guide" data-label="首页">
+                <i data-lucide="home" style="width:20px;height:20px"></i>
+                <span class="dock-tooltip">首页</span>
+            </div>
+            <div class="dock-item active" data-screen="main" data-label="练习">
+                <i data-lucide="pen-tool" style="width:20px;height:20px"></i>
+                <span class="dock-tooltip">练习</span>
+            </div>
+            <div class="dock-item" data-screen="settings" data-label="设置">
+                <i data-lucide="settings" style="width:20px;height:20px"></i>
+                <span class="dock-tooltip">设置</span>
+            </div>
+            <div class="dock-item" data-screen="profile" data-label="个人">
+                <i data-lucide="user" style="width:20px;height:20px"></i>
+                <span class="dock-tooltip">个人</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 加载遮罩 ==================== -->
+    <div id="screen-loading" class="loading-overlay" style="display: none;">
         <div class="loading-card">
             <div class="spinner"></div>
-            <p id="loading-text" class="loading-text">正在生成题目...</p>
+            <p id="loading-text" class="loading-text">加载中...</p>
             <p class="loading-sub">这可能需要几秒钟</p>
         </div>
     </div>
 
     <!-- ==================== 屏幕 -1：使用指南 ==================== -->
     <div id="screen-guide" class="screen" style="display: none;">
-        <div class="screen-inner">
-            <div class="guide-header">
-                <div class="guide-emoji">🇯🇵</div>
-                <h1 class="screen-title">欢迎使用 JapAI</h1>
-                <p class="screen-subtitle">你的<span class="text-highlight">专属日语私教</span>，越用越懂你</p>
+        <div class="guide-container">
+            <!-- Hero -->
+            <div class="guide-hero">
+                <div class="guide-hero-icon"><i data-lucide="languages" style="width:64px;height:64px"></i></div>
+                <h1 class="guide-hero-title">JapAI<span class="beta-badge">Beta 1.0</span></h1>
+                <p class="guide-hero-sub">你的<span class="text-highlight">专属日语私教</span>，越用越懂你</p>
             </div>
 
-            <!-- 核心亮点卡片 -->
-            <div class="guide-cards">
-                <div class="guide-card">
-                    <div class="guide-card-icon">🔒</div>
-                    <div class="guide-card-content">
-                        <h3 class="guide-card-title">隐私<span class="text-accent">安全</span>，数据不上传</h3>
-                        <p class="guide-card-desc">你的 <strong>API Key</strong> 和所有学习数据<strong>仅保存在电脑本地</strong>，不会上传至任何第三方服务器。你可以放心使用，无需担心隐私泄露。</p>
-                    </div>
+            <!-- Bento 2x2 功能卡片 -->
+            <div class="guide-bento">
+                <div class="guide-bento-card card" style="grid-area: a;">
+                    <div class="guide-bento-icon"><i data-lucide="shield-check" style="width:24px;height:24px"></i></div>
+                    <h3>隐私安全</h3>
+                    <p>API Key 和数据仅保存在本地，不上传至任何服务器</p>
                 </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-icon">📚</div>
-                    <div class="guide-card-content">
-                        <h3 class="guide-card-title">搭配教材，<span class="text-accent">随学随练</span></h3>
-                        <p class="guide-card-desc">建议搭配<strong>《标准日本语》</strong>等教材使用。每学完一课，将该课的<strong>语法笔记</strong>和<strong>生词表</strong>粘贴进来，AI 立刻为你生成专属翻译闯关题，即时巩固所学知识。</p>
-                    </div>
+                <div class="guide-bento-card card" style="grid-area: b;">
+                    <div class="guide-bento-icon"><i data-lucide="book-open" style="width:24px;height:24px"></i></div>
+                    <h3>搭配教材</h3>
+                    <p>内置标日知识库，选课即用，出题不超纲</p>
                 </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-icon">🧠</div>
-                    <div class="guide-card-content">
-                        <h3 class="guide-card-title"><span class="text-accent">AI 记忆系统</span>，越用越聪明</h3>
-                        <p class="guide-card-desc">你学过的每一个<strong>语法点</strong>和<strong>生词</strong>都会被记录在本地知识库中。AI 会根据你的<strong>掌握程度</strong>自动安排螺旋复习，出题越来越<strong>契合你的水平</strong>——就像一位真正了解你的老师。</p>
-                    </div>
+                <div class="guide-bento-card card" style="grid-area: c;">
+                    <div class="guide-bento-icon"><i data-lucide="brain" style="width:24px;height:24px"></i></div>
+                    <h3>AI 记忆系统</h3>
+                    <p>艾宾浩斯自动复习 + 错题本，越练越聪明</p>
                 </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-icon">🤖</div>
-                    <div class="guide-card-content">
-                        <h3 class="guide-card-title">搭载 <span class="text-accent">DeepSeek V4 Flash</span></h3>
-                        <p class="guide-card-desc">当前版本基于<strong>DeepSeek V4 Flash</strong>驱动，提供最优质的日语教学体验。你可在设置中自定义使用的模型。未来将支持更多模型接入。</p>
-                    </div>
+                <div class="guide-bento-card card" style="grid-area: d;">
+                    <div class="guide-bento-icon"><i data-lucide="cpu" style="width:24px;height:24px"></i></div>
+                    <h3>DeepSeek 驱动</h3>
+                    <p>搭载最新 AI 模型，日语教学能力一流</p>
                 </div>
             </div>
 
-            <!-- 流程示意 -->
+            <!-- 支持开发者 -->
+            <div class="guide-support">
+                <a class="guide-support-card" href="https://github.com/Bekzat070101/JapAI" target="_blank" rel="noopener">
+                    <div class="guide-support-icon"><i data-lucide="star" style="width:22px;height:22px"></i></div>
+                    <div class="guide-support-text">
+                        <strong>GitHub Star</strong>
+                        <span>给项目点个 Star 支持开发</span>
+                    </div>
+                    <i data-lucide="external-link" style="width:14px;height:14px;color:var(--text-tertiary)"></i>
+                </a>
+                <a class="guide-support-card" href="https://space.bilibili.com/412868200" target="_blank" rel="noopener">
+                    <div class="guide-support-icon bilibili"><i data-lucide="zap" style="width:22px;height:22px"></i></div>
+                    <div class="guide-support-text">
+                        <strong>B站充电</strong>
+                        <span>充电支持 UP 主继续创作</span>
+                    </div>
+                    <i data-lucide="external-link" style="width:14px;height:14px;color:var(--text-tertiary)"></i>
+                </a>
+            </div>
+
+            <!-- 流程 -->
             <div class="guide-flow">
-                <div class="guide-flow-item">
-                    <span class="guide-flow-num">1</span>
-                    <span>粘贴笔记</span>
-                </div>
-                <span class="guide-flow-arrow">→</span>
-                <div class="guide-flow-item">
-                    <span class="guide-flow-num">2</span>
-                    <span>AI 出题</span>
-                </div>
-                <span class="guide-flow-arrow">→</span>
-                <div class="guide-flow-item">
-                    <span class="guide-flow-num">3</span>
-                    <span>逐题闯关</span>
-                </div>
-                <span class="guide-flow-arrow">→</span>
-                <div class="guide-flow-item">
-                    <span class="guide-flow-num">4</span>
-                    <span>生成复习笔记</span>
-                </div>
+                <div class="guide-flow-step"><span class="flow-num">1</span><span>粘贴笔记</span></div>
+                <i data-lucide="arrow-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
+                <div class="guide-flow-step"><span class="flow-num">2</span><span>AI 出题</span></div>
+                <i data-lucide="arrow-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
+                <div class="guide-flow-step"><span class="flow-num">3</span><span>逐题闯关</span></div>
+                <i data-lucide="arrow-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
+                <div class="guide-flow-step"><span class="flow-num">4</span><span>生成笔记</span></div>
             </div>
 
             <button id="btn-guide-start" class="btn btn-primary btn-full btn-lg">
-                🚀 开始使用
+                <i data-lucide="rocket" style="width:20px;height:20px"></i> 开始使用
             </button>
-
-            <p class="guide-footer-text">
-                首次使用需要设置 <strong>DeepSeek API Key</strong>，Key 仅保存在本地
-            </p>
+            <p class="guide-footer-text">首次使用需要设置 DeepSeek API Key，Key 仅保存在本地</p>
         </div>
     </div>
 
     <!-- ==================== 屏幕 1：API Key 设置 ==================== -->
     <div id="screen-setup" class="screen" style="display: none;">
-        <div class="screen-inner">
-            <div class="setup-icon">🔑</div>
-            <h1 class="screen-title">欢迎使用 JapAI</h1>
-            <p class="screen-desc">在开始之前，请先设置你的 DeepSeek API Key</p>
-
-            <div class="card setup-card">
+        <div class="setup-container">
+            <div class="setup-hero">
+                <div class="setup-icon-wrap"><i data-lucide="key" style="width:40px;height:40px"></i></div>
+                <h1>欢迎使用 JapAI</h1>
+                <p class="setup-desc">在开始之前，请先设置你的 DeepSeek API Key</p>
+            </div>
+            <div class="card setup-card" data-glow>
                 <label class="input-label" for="api-key-input">API Key</label>
-                <input
-                    type="password"
-                    id="api-key-input"
-                    class="input"
-                    placeholder="sk-..."
-                    autocomplete="off"
-                >
-                <p class="input-hint">
-                    在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 平台</a> 获取 API Key，Key 仅保存在本地
-                </p>
-                <button id="btn-save-key" class="btn btn-primary btn-full">保存并继续 →</button>
+                <input type="password" id="api-key-input" class="input" placeholder="sk-..." autocomplete="off">
+                <p class="input-hint">在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 平台</a> 获取，Key 仅保存在本地</p>
+                <button id="btn-save-key" class="btn btn-primary btn-full">保存并继续 <i data-lucide="arrow-right" style="width:16px;height:16px"></i></button>
                 <p id="setup-error" class="error-text" style="display: none;"></p>
             </div>
-
             <div class="setup-footer">
                 <button id="btn-skip-setup" class="btn btn-text">跳过，稍后设置</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== 屏幕 2：主页（级别选择 + 笔记输入） ==================== -->
+    <!-- ==================== 屏幕 2：主页 ==================== -->
     <div id="screen-main" class="screen" style="display: none;">
-        <div class="screen-inner">
+        <div class="main-layout">
+            <!-- 顶部标题区 -->
             <div class="main-header">
-                <h1 class="screen-title">JapAI</h1>
-                <p class="screen-subtitle">日语语法闯关练习</p>
+                <h1 class="main-logo">JapAI<span class="beta-badge">Beta 1.0</span></h1>
+                <p class="main-tagline">日语语法闯关练习</p>
             </div>
 
-            <!-- 级别选择 -->
-            <div class="card">
-                <p class="input-label">选择你的日语级别</p>
-                <div class="level-selector" id="level-selector">
-                    <button class="level-btn" data-level="N5">N5<span class="level-desc">入门</span></button>
-                    <button class="level-btn" data-level="N4">N4<span class="level-desc">初级</span></button>
-                    <button class="level-btn active" data-level="N3">N3<span class="level-desc">中级</span></button>
-                    <button class="level-btn" data-level="N2">N2<span class="level-desc">中高级</span></button>
-                    <button class="level-btn" data-level="N1">N1<span class="level-desc">高级</span></button>
-                </div>
+            <!-- 复习状态卡片 -->
+            <div class="card review-card" id="review-status-bar" style="display: none;">
+                <div class="review-card-inner" id="review-card-inner"></div>
             </div>
 
-            <!-- 笔记输入 -->
-            <div class="card">
-                <label class="input-label" for="notes-input">📖 粘贴你的语法笔记</label>
-                <textarea
-                    id="notes-input"
-                    class="input textarea"
-                    placeholder="在这里粘贴你的幕布语法笔记...
+            <!-- 双栏：配置 + 打卡 -->
+            <div class="main-body">
+                <div class="main-config">
+                    <!-- 教材选择 -->
+                    <div class="card config-card" data-glow>
+                        <div class="config-card-header">
+                            <i data-lucide="book-open" style="width:18px;height:18px"></i>
+                            <span>教材选择</span>
+                            <span class="badge-optional">可选</span>
+                        </div>
+                        <select id="textbook-select" class="input" style="margin-top: var(--space-sm);">
+                            <option value="">自由模式（不使用教材）</option>
+                        </select>
+                        <select id="lesson-select" class="input" style="margin-top: var(--space-sm); display: none;">
+                            <option value="0">全部课程</option>
+                        </select>
+                        <p class="input-hint" id="textbook-hint">选课后自动限定出题范围</p>
+                    </div>
 
+                    <!-- 级别选择 -->
+                    <div class="card config-card" data-glow="sweep">
+                        <div class="config-card-header">
+                            <i data-lucide="bar-chart-3" style="width:18px;height:18px"></i>
+                            <span>目标级别</span>
+                        </div>
+                        <div class="level-selector" id="level-selector">
+                            <button class="level-btn" data-level="N5">N5<span class="level-desc">入门</span></button>
+                            <button class="level-btn" data-level="N4">N4<span class="level-desc">初级</span></button>
+                            <button class="level-btn active" data-level="N3">N3<span class="level-desc">中级</span></button>
+                            <button class="level-btn" data-level="N2">N2<span class="level-desc">中高级</span></button>
+                            <button class="level-btn" data-level="N1">N1<span class="level-desc">高级</span></button>
+                        </div>
+                    </div>
+
+                    <!-- 笔记输入 -->
+                    <div class="card config-card config-card-notes" data-glow>
+                        <div class="config-card-header">
+                            <i data-lucide="edit-3" style="width:18px;height:18px"></i>
+                            <span>语法笔记</span>
+                        </div>
+                        <textarea id="notes-input" class="input textarea" placeholder="在这里粘贴你的语法笔记...
 例如：
 〜てから / 做完…之后
 接续：Vて形 + から
-意思：表示做完前项动作之后，再做后项动作..."
-                ></textarea>
-                <p class="input-hint" id="char-count">0 字</p>
-            </div>
+意思：表示做完前项动作之后，再做后项动作..."></textarea>
+                        <p class="input-hint" id="char-count">0 字</p>
+                    </div>
 
-            <!-- 单词输入（非强制） -->
-            <div class="card vocab-card">
-                <div class="vocab-header">
-                    <label class="input-label vocab-label" for="vocab-input">
-                        📝 今日学习单词
-                    </label>
-                    <span class="badge-optional">非强制</span>
-                </div>
-                <p class="input-hint vocab-hint">
-                    输入今天学的新单词，AI 会尽量用这些词来出题，帮助你同时巩固词汇和语法。已学单词会自动存入本地词库。
-                </p>
-                <textarea
-                    id="vocab-input"
-                    class="input textarea"
-                    style="min-height: 120px;"
-                    placeholder="每行一个单词，格式：日语 / 读音 / 中文意思 / 词性
-
-例如：
+                    <!-- 单词输入 -->
+                    <div class="card config-card config-card-vocab" data-glow>
+                        <div class="config-card-header">
+                            <i data-lucide="list" style="width:18px;height:18px"></i>
+                            <span>今日单词</span>
+                            <span class="badge-optional">可选</span>
+                        </div>
+                        <textarea id="vocab-input" class="input textarea vocab-textarea" placeholder="每行一个：日语 / 读音 / 中文 / 词性
 食べる / たべる / 吃 / 動詞
-天気 / てんき / 天气 / 名詞
-美味しい / おいしい / 好吃的 / 形容詞..."
-                ></textarea>
-                <p class="input-hint" id="vocab-char-count">0 字</p>
-                <div class="vocab-toggle-wrap">
-                    <label class="toggle-label">
-                        <input type="checkbox" id="vocab-enabled" checked>
-                        <span>启用单词出题</span>
-                    </label>
+天気 / てんき / 天气 / 名詞"></textarea>
+                        <p class="input-hint" id="vocab-char-count">0 字</p>
+                        <label class="toggle-label" style="margin-top: var(--space-sm);">
+                            <input type="checkbox" id="vocab-enabled" checked>
+                            <span>启用单词出题</span>
+                        </label>
+                    </div>
                 </div>
+
+                <!-- 右侧：打卡记录缩略图 -->
+                <div class="main-sidebar">
+                    <div class="card checkin-mini" id="checkin-mini">
+                        <div class="checkin-mini-header">
+                            <i data-lucide="flame" style="width:18px;height:18px;color:var(--color-warning)"></i>
+                            <span>学习打卡</span>
+                        </div>
+                        <div class="checkin-mini-stats" id="checkin-mini-stats">
+                            <div class="checkin-mini-stat">
+                                <span class="checkin-mini-num" id="checkin-streak-num">--</span>
+                                <span class="checkin-mini-label">连续天数</span>
+                            </div>
+                            <div class="checkin-mini-divider"></div>
+                            <div class="checkin-mini-stat">
+                                <span class="checkin-mini-num" id="checkin-month-num">--</span>
+                                <span class="checkin-mini-label">本月累计</span>
+                            </div>
+                        </div>
+                        <div class="checkin-mini-dots" id="checkin-mini-dots"></div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- 开始按钮 -->
-            <button id="btn-start" class="btn btn-primary btn-full btn-lg">
-                开始训练 🚀
-            </button>
-            <p id="main-error" class="error-text" style="display: none;"></p>
-
-            <!-- 底部链接 -->
-            <div class="main-footer">
-                <button id="btn-goto-history" class="btn btn-text">📋 历史记录</button>
-                <button id="btn-goto-settings" class="btn btn-text">⚙️ 设置</button>
+            <!-- 底部：开始按钮 -->
+            <div class="main-start">
+                <button id="btn-start" class="btn btn-primary btn-full btn-lg">
+                    开始训练 <i data-lucide="rocket" style="width:20px;height:20px"></i>
+                </button>
+                <p id="main-error" class="error-text" style="display: none;"></p>
             </div>
         </div>
     </div>
 
     <!-- ==================== 屏幕 3：答题界面 ==================== -->
     <div id="screen-quiz" class="screen" style="display: none;">
-        <div class="screen-inner">
-            <!-- 进度条 -->
-            <div class="quiz-progress">
-                <div class="progress-info">
-                    <span id="progress-text">第 1 / 10 题</span>
-                    <span id="progress-score" class="progress-score"></span>
+        <div class="quiz-layout">
+            <!-- 顶部导航条 -->
+            <div class="quiz-topbar">
+                <button id="btn-quiz-back" class="btn btn-text" style="padding:0;">← 退出</button>
+                <div class="quiz-steps" id="quiz-steps">
+                    <!-- 步骤圆点动态生成 -->
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
-                </div>
+                <div class="quiz-topbar-score" id="progress-score"></div>
             </div>
 
-            <!-- 题目卡片 -->
-            <div class="card quiz-card" id="quiz-card">
-                <!-- 超纲标签 -->
-                <span class="badge badge-extra" id="badge-extra" style="display: none;">📌 拓展</span>
-                <!-- 难度标签 -->
-                <span class="badge badge-difficulty" id="badge-difficulty" style="display: none;"></span>
+            <!-- 题目主体 -->
+            <div class="quiz-body">
+                <div class="quiz-question-area" id="quiz-question-area">
+                    <div class="quiz-badges">
+                        <span class="badge badge-extra" id="badge-extra" style="display: none;">📌 拓展</span>
+                        <span class="badge badge-difficulty" id="badge-difficulty" style="display: none;"></span>
+                    </div>
+                    <div class="grammar-tag" id="grammar-tag"></div>
+                    <div class="quiz-scene" id="quiz-scene"></div>
+                    <div class="quiz-format" id="quiz-format" style="display: none;"></div>
+                    <div class="quiz-chinese" id="quiz-chinese" data-glow></div>
+                </div>
 
-                <!-- 语法点 -->
-                <div class="grammar-tag" id="grammar-tag"></div>
-
-                <!-- 场景 -->
-                <div class="quiz-scene" id="quiz-scene"></div>
-
-                <!-- 表达方式（作文模式） -->
-                <div class="quiz-format" id="quiz-format" style="display: none;"></div>
-
-                <!-- 中文句子 -->
-                <div class="quiz-chinese" id="quiz-chinese"></div>
-
-                <!-- 词汇提示 -->
-                <div class="quiz-hints" id="quiz-hints">
+                <!-- 词汇提示浮动在右边 -->
+                <div class="quiz-hints-panel" id="quiz-hints" style="display: none;">
                     <button class="hints-toggle" id="hints-toggle">💡 词汇提示 ▾</button>
                     <div class="hints-content" id="hints-content" style="display: none;"></div>
                 </div>
             </div>
 
-            <!-- 答题输入（单行） -->
-            <div class="answer-area" id="answer-area-normal">
+            <!-- 底部答题栏 -->
+            <div class="quiz-answer-bar" id="answer-area-normal">
                 <div class="answer-input-row">
-                    <input
-                        type="text"
-                        id="answer-input"
-                        class="input"
-                        placeholder="在这里输入你的日语翻译..."
-                        autocomplete="off"
-                    >
-                    <button id="btn-submit" class="btn btn-primary">提交</button>
+                    <input type="text" id="answer-input" class="input answer-input-lg" placeholder="在这里输入你的日语翻译..." autocomplete="off">
+                    <button id="btn-submit" class="btn btn-primary answer-submit-btn">提交</button>
                 </div>
                 <p class="input-hint">按 Enter 提交答案</p>
             </div>
 
-            <!-- 答题输入（多行 / 作文模式） -->
-            <div class="answer-area" id="answer-area-essay" style="display: none;">
-                <textarea
-                    id="essay-input"
-                    class="input textarea"
-                    style="min-height: 150px;"
-                    placeholder="在这里输入你的日语翻译（可用多句话）..."
-                ></textarea>
+            <!-- 作文输入区 -->
+            <div class="quiz-answer-bar" id="answer-area-essay" style="display: none;">
+                <textarea id="essay-input" class="input textarea essay-textarea" placeholder="在这里输入你的日语翻译（可用多句话）..."></textarea>
                 <button id="btn-essay-submit" class="btn btn-primary btn-full" style="margin-top: 12px;">提交作文</button>
             </div>
 
-            <!-- 反馈区域（提交后显示） -->
+            <!-- 反馈区域（内联） -->
             <div class="feedback-area" id="feedback-area" style="display: none;">
-                <div class="card feedback-card" id="feedback-card">
-                    <!-- 动态填充 -->
-                </div>
-
-                <!-- 操作按钮 -->
-                <div class="feedback-actions" id="feedback-actions">
-                    <!-- 动态填充 -->
-                </div>
+                <div class="feedback-card" id="feedback-card"></div>
+                <div class="feedback-actions" id="feedback-actions"></div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== 屏幕 4：总结预览 ==================== -->
+    <!-- ==================== 屏幕 4：总结 ==================== -->
     <div id="screen-summary" class="screen" style="display: none;">
-        <div class="screen-inner">
-            <div class="summary-header">
-                <h1 class="screen-title">🎉 练习完成！</h1>
-                <p class="screen-desc">专属复习笔记已生成</p>
+        <div class="summary-container">
+            <div class="summary-hero">
+                <div class="summary-hero-icon"><i data-lucide="party-popper" style="width:48px;height:48px"></i></div>
+                <h1>练习完成！</h1>
+                <p>专属复习笔记已生成</p>
             </div>
 
-            <!-- 统计卡片 -->
-            <div class="card stats-card" id="stats-card">
-                <!-- 动态填充 -->
+            <!-- 仪表盘统计 -->
+            <div class="summary-dashboard" id="stats-card">
+                <!-- JS 动态填充 — 4+1 个指标卡 -->
             </div>
 
-            <!-- Markdown 预览 -->
-            <div class="card summary-card">
-                <div class="markdown-body" id="markdown-preview">
-                    <!-- 动态填充 -->
+            <!-- 手风琴式内容 -->
+            <div class="summary-accordion">
+                <div class="accordion-item open">
+                    <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+                        <i data-lucide="file-text" style="width:18px;height:18px"></i>
+                        <span>复习笔记</span>
+                        <i data-lucide="chevron-down" style="width:16px;height:16px;margin-left:auto;transition:transform 0.2s"></i>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="markdown-body" id="markdown-preview">
+                            <!-- Markdown 渲染 -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 操作按钮 -->
             <div class="summary-actions">
-                <button id="btn-download" class="btn btn-primary">📥 下载 .md 文件</button>
-                <button id="btn-new-round" class="btn btn-secondary">🔄 再来一轮</button>
+                <button id="btn-download" class="btn btn-primary"><i data-lucide="download" style="width:18px;height:18px"></i> 下载 .md 文件</button>
+                <button id="btn-new-round" class="btn btn-secondary"><i data-lucide="refresh-cw" style="width:18px;height:18px"></i> 再来一轮</button>
             </div>
         </div>
     </div>
 
     <!-- ==================== 屏幕 5：历史记录 ==================== -->
     <div id="screen-history" class="screen" style="display: none;">
-        <div class="screen-inner">
+        <div class="history-container">
             <div class="history-header">
                 <button id="btn-history-back" class="btn btn-text">← 返回主页</button>
-                <h1 class="screen-title">📋 历史记录</h1>
+                <h1>历史记录</h1>
             </div>
-
-            <div class="history-list" id="history-list">
-                <!-- 动态填充 -->
-            </div>
-
-            <p class="empty-state" id="history-empty" style="display: none;">
-                还没有练习记录，快去开始第一次训练吧！
-            </p>
+            <div class="history-list" id="history-list"></div>
+            <p class="empty-state" id="history-empty" style="display: none;">还没有练习记录，快去开始第一次训练吧！</p>
         </div>
     </div>
 
     <!-- ==================== 屏幕 6：历史详情 ==================== -->
     <div id="screen-history-detail" class="screen" style="display: none;">
-        <div class="screen-inner">
+        <div class="history-container">
             <div class="history-header">
                 <button id="btn-detail-back" class="btn btn-text">← 返回历史列表</button>
-                <h1 class="screen-title" id="detail-title">练习记录</h1>
+                <h1 id="detail-title">练习记录</h1>
             </div>
-
-            <div class="card summary-card">
-                <div class="markdown-body" id="detail-preview">
-                    <!-- 动态填充 -->
-                </div>
+            <div class="card summary-card" data-glow>
+                <div class="markdown-body" id="detail-preview"></div>
             </div>
-
             <div class="summary-actions">
-                <button id="btn-detail-download" class="btn btn-primary">📥 下载 .md 文件</button>
+                <button id="btn-detail-download" class="btn btn-primary"><i data-lucide="download" style="width:18px;height:18px"></i> 下载 .md 文件</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== 弹窗：恢复进度确认 ==================== -->
+    <!-- ==================== 屏幕 7：错题本 ==================== -->
+    <div id="screen-wrong-book" class="screen" style="display: none;">
+        <div class="history-container">
+            <div class="history-header">
+                <button id="btn-wrong-back" class="btn btn-text">← 返回主页</button>
+                <h1>错题本</h1>
+            </div>
+            <div class="wrong-stats" id="wrong-stats" style="display: none;"></div>
+            <div class="wrong-list" id="wrong-list"></div>
+            <p class="empty-state" id="wrong-empty" style="display: none;">还没有错题，继续保持！🎉</p>
+        </div>
+    </div>
+
+    <!-- ==================== 弹窗：恢复进度 ==================== -->
     <div id="modal-resume" class="modal-overlay" style="display: none;">
         <div class="modal-card">
             <h2 class="modal-title">📝 发现未完成的练习</h2>
@@ -368,14 +399,313 @@
         </div>
     </div>
 
-    <!-- ==================== 弹窗：是否保存到知识库 ==================== -->
+    <!-- ==================== 弹窗：保存知识库 ==================== -->
     <div id="modal-save-learned" class="modal-overlay" style="display: none;">
         <div class="modal-card">
             <h2 class="modal-title">💾 保存学习记录</h2>
-            <p class="modal-desc">是否将本次练习的语法点保存到知识库？<br><small>保存后，后续出题会自动融入这些内容作为复习。</small><br><small>如果只是随便练练，可以选择"不保存"。</small></p>
+            <p class="modal-desc">是否将本次练习的语法点保存到知识库？<br><small>保存后，后续出题会自动融入这些内容作为复习。</small></p>
             <div class="modal-actions">
                 <button id="btn-save-yes" class="btn btn-primary">保存到知识库</button>
                 <button id="btn-save-no" class="btn btn-text">不保存，仅这次练习</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 弹窗：隐私政策 ==================== -->
+    <div id="modal-privacy" class="modal-overlay" style="display: none;">
+        <div class="modal-card privacy-modal-card">
+            <div class="privacy-header">
+                <h2 class="modal-title"><i data-lucide="shield-check" style="width:24px;height:24px;color:var(--color-primary)"></i> 隐私政策</h2>
+                <p class="privacy-update">最后更新：2026 年 7 月 23 日</p>
+            </div>
+
+            <div class="privacy-body">
+
+                <!-- 核心要点（突出显示） -->
+                <div class="privacy-highlights">
+                    <h3>核心要点</h3>
+
+                    <div class="privacy-highlight-item">
+                        <div class="privacy-highlight-icon"><i data-lucide="heart" style="width:20px;height:20px"></i></div>
+                        <div class="privacy-highlight-text">
+                            <strong>开源免费 · 禁止商用</strong>
+                            <p>JapAI 为开源免费软件（MIT 协议），仅供个人学习使用。<span class="text-underline">未经作者明确书面授权，严禁将本软件用于任何商业目的</span>，包括但不限于：转售、捆绑销售、出租、作为商业服务组件、或通过本软件直接或间接盈利。</p>
+                        </div>
+                    </div>
+
+                    <div class="privacy-highlight-item">
+                        <div class="privacy-highlight-icon"><i data-lucide="hard-drive" style="width:20px;height:20px"></i></div>
+                        <div class="privacy-highlight-text">
+                            <strong>100% 本地存储 · 零云端上传</strong>
+                            <p>您的所有数据 —— 包括 <span class="text-underline">DeepSeek API Key、学习笔记、答题记录、错题本、知识库进度、个人配置</span> —— 均以 JSON 文件形式存储在您电脑本地。JapAI <span class="text-underline">不包含任何数据上传、云端同步、遥测采集或远程存储机制</span>。您可以随时通过「设置 → 清除数据」一键删除全部数据，或手动删除程序目录下的数据文件。</p>
+                        </div>
+                    </div>
+
+                    <div class="privacy-highlight-item">
+                        <div class="privacy-highlight-icon"><i data-lucide="wifi-off" style="width:20px;height:20px"></i></div>
+                        <div class="privacy-highlight-text">
+                            <strong>联网仅限 AI 调用 · 其余功能完全离线</strong>
+                            <p>JapAI 仅在以下场景连接网络：<span class="text-underline">向 DeepSeek API（api.deepseek.com）发送学习笔记和答题内容，以生成题目和批改反馈</span>。除此之外的全部功能 —— 历史记录查看、错题本复习、艾宾浩斯记忆系统、知识库管理 —— <span class="text-underline">均可完全离线使用，无需网络连接</span>。除 DeepSeek 服务外，没有任何第三方服务器会接触到您的学习数据。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 正文条款 -->
+                <h3>1. 信息收集与使用</h3>
+                <p>JapAI 是一款本地运行的桌面软件。<strong>我们不收集、不存储、不上传您的任何个人信息</strong>。您在软件中产生的所有数据（详见第 2 条）仅保存在您设备的本地文件系统中，我们无法访问，也不会访问。</p>
+                <p>当您使用 AI 出题和批改功能时，您输入的笔记内容和答题数据会被发送至 DeepSeek 的 API 服务器进行处理。这是唯一涉及数据传输的场景。有关 DeepSeek 如何处理您的数据，请参阅 <a href="https://platform.deepseek.com/privacy" target="_blank" rel="noopener">DeepSeek 隐私政策</a>。</p>
+
+                <h3>2. 本地存储的数据类型</h3>
+                <p>以下数据存储在您设备上（位于 JapAI 程序目录中），<strong>均不会上传至任何服务器</strong>：</p>
+                <ul>
+                    <li><strong>API 密钥：</strong>您的 DeepSeek API Key，用于调用 AI 服务</li>
+                    <li><strong>学习笔记：</strong>您粘贴的语法笔记和单词列表</li>
+                    <li><strong>答题记录：</strong>每道题的作答内容、AI 批改反馈和得分</li>
+                    <li><strong>错题本：</strong>被自动收录的错误题目及错误详情</li>
+                    <li><strong>知识库：</strong>已学习语法点的追踪数据和艾宾浩斯复习进度</li>
+                    <li><strong>个人设置：</strong>级别偏好、主题选择、教材选择等配置</li>
+                </ul>
+
+                <h3>3. 数据安全</h3>
+                <p>您的数据安全完全取决于您对自己电脑的保护。<strong>您应当：</strong></p>
+                <ul>
+                    <li>妥善保管您的 DeepSeek API Key，不要分享给他人</li>
+                    <li>定期检查 DeepSeek 平台的 API 使用量，确保 Key 未被泄露</li>
+                    <li>如发现 API Key 泄露，立即在 DeepSeek 平台重置 Key</li>
+                </ul>
+                <p>JapAI 无法访问您的设备，因此<strong>无法为数据丢失或泄露承担责任</strong>。建议定期备份您的学习数据。</p>
+
+                <h3>4. 第三方服务</h3>
+                <p>JapAI 仅依赖一个第三方服务：</p>
+                <ul>
+                    <li><strong>DeepSeek API</strong>（深度求索）：用于 AI 题目生成和答案批改。当您使用这些功能时，笔记内容和答题数据会通过加密的 HTTPS 连接发送至 api.deepseek.com。DeepSeek 对其 API 调用数据的处理受其自身隐私政策约束。</li>
+                </ul>
+                <p>除此之外，JapAI <strong>不集成任何</strong>：分析统计 SDK、广告网络、错误追踪服务、第三方登录、CDN（所有资源本地加载）、遥测或埋点系统。</p>
+
+                <h3>5. 用户权利</h3>
+                <p>您对您的数据拥有完全的控制权：</p>
+                <ul>
+                    <li><strong>随时查看：</strong>所有数据以可读的 JSON 格式存储在本地，可用任何文本编辑器打开</li>
+                    <li><strong>随时删除：</strong>通过设置页「清除数据」按钮一键删除，或手动删除对应 JSON 文件</li>
+                    <li><strong>随时导出：</strong>练习总结可下载为 Markdown 文件；历史记录和错题本可通过复制 JSON 文件导出</li>
+                    <li><strong>无需注册：</strong>本软件不要求创建账户、不收集邮箱、不需要手机号</li>
+                </ul>
+
+                <h3>6. 开源协议</h3>
+                <p>JapAI 基于 <strong>MIT 许可证</strong>开源发布。您可以自由地：</p>
+                <ul>
+                    <li>使用、复制、修改、分发本软件</li>
+                    <li>将本软件用于个人学习目的</li>
+                </ul>
+                <p><strong>限制：</strong>未经作者明确书面授权，不得将本软件或其衍生作品用于商业目的。完整的 MIT 许可证文本随软件一同分发（LICENSE 文件）。</p>
+
+                <h3>7. 免责声明</h3>
+                <p>本软件按「现状」提供，不提供任何明示或暗示的保证。在任何情况下，作者或版权持有人均不对因使用本软件而产生的任何索赔、损害或其他责任负责。</p>
+                <p>AI 生成的题目和批改内容仅供参考学习，不构成专业教育建议。用户应对自己的学习效果负责。</p>
+
+                <h3>8. 未成年人保护</h3>
+                <p>本软件为教育工具，内容不包含任何不适宜未成年人的信息。但我们建议未成年人在监护人指导下使用本软件及配置 API Key（涉及付费服务）。</p>
+
+                <h3>9. 隐私政策更新</h3>
+                <p>我们可能会不时更新本隐私政策。更新后的政策将随软件新版本一同发布。重大变更将在软件的更新日志中注明。</p>
+
+                <h3>支持开发者</h3>
+                <p>JapAI 是完全免费的开源软件，开发与维护需要大量精力。如果你的日语学习因 JapAI 而受益，欢迎通过以下方式支持开发者：</p>
+                <ul>
+                    <li><strong>⭐ GitHub Star：</strong>去 <a href="https://github.com/Bekzat070101/JapAI" target="_blank" rel="noopener">github.com/Bekzat070101/JapAI</a> 给项目点个 Star，这是最简便的支持方式，也是对开发者最大的鼓励</li>
+                    <li><strong>☕ GitHub Sponsors：</strong>通过 GitHub Sponsors 赞助开发者，帮助项目持续迭代、增加更多功能</li>
+                </ul>
+
+                <h3>10. 联系方式</h3>
+                <p>如对本隐私政策有任何疑问，请通过以下方式联系：</p>
+                <ul>
+                    <li>GitHub Issues：<a href="https://github.com/Bekzat070101/JapAI/issues" target="_blank" rel="noopener">github.com/Bekzat070101/JapAI</a></li>
+                    <li>在 GitHub 仓库中提交 Issue 或 Discussion</li>
+                </ul>
+            </div>
+
+            <div class="privacy-footer">
+                <button id="btn-privacy-close" class="btn btn-primary">我已了解，关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 弹窗：使用说明 ==================== -->
+    <div id="modal-guide" class="modal-overlay" style="display: none;">
+        <div class="modal-card privacy-modal-card">
+            <div class="privacy-header">
+                <h2 class="modal-title"><i data-lucide="book-open" style="width:24px;height:24px;color:var(--color-primary)"></i> 使用说明</h2>
+                <p class="privacy-update">快速上手 JapAI，5 分钟搞定</p>
+            </div>
+
+            <div class="privacy-body">
+                <div class="guide-step">
+                    <div class="guide-step-num">1</div>
+                    <div class="guide-step-content">
+                        <h4>获取 DeepSeek API Key</h4>
+                        <p>前往 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 开放平台</a> 注册账号并创建 API Key。</p>
+                        <ul>
+                            <li>在设置页面中输入你获得的 API Key（以 <code>sk-</code> 开头）</li>
+                            <li>Key 仅保存在你电脑本地，不会上传到任何服务器</li>
+                            <li>DeepSeek API 采用按量计费，<strong>每次出题 + 批改约花费 ¥0.01 左右</strong>，新用户通常有免费额度</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="guide-step-num">2</div>
+                    <div class="guide-step-content">
+                        <h4>输入本日语法笔记</h4>
+                        <p>将今天学到的语法内容粘贴到笔记框中。<strong>没有严格的格式要求</strong>，但建议按如下结构整理，AI 理解会更准确：</p>
+                        <div class="guide-format-example">
+                            <strong>建议格式：</strong>语法点 / 接续 / 中文意思 / 例句<br>
+                            例如：〜てから / Vて形 + から / 做完…之后 / 朝ごはんを食べてから、学校に行きます。
+                        </div>
+                        <p style="margin-top: var(--space-sm);">也可以在教学材料中批量复制粘贴，AI 会自动提取语法点。选填「今日单词」可让 AI 在出题时融入新词汇。</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="guide-step-num">3</div>
+                    <div class="guide-step-content">
+                        <h4>开始练习，逐题翻译</h4>
+                        <p>点击「开始训练」后，AI 会根据你的笔记和所选级别生成翻译题：</p>
+                        <ul>
+                            <li>每道题会展示一个<strong>使用场景</strong>和一句<strong>中文</strong>，你需要将其翻译成日语</li>
+                            <li>在输入框中输入日语翻译，按 <strong>Enter</strong> 键提交</li>
+                            <li>如果有词汇提示，可以点击展开查看</li>
+                            <li>题目难度会根据你的表现动态调整</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="guide-step-num">4</div>
+                    <div class="guide-step-content">
+                        <h4>查看批改反馈</h4>
+                        <p>提交答案后，AI 会逐项分析你的翻译：</p>
+                        <ul>
+                            <li><strong>✅ 正确的地方：</strong>你做得好的部分</li>
+                            <li><strong>❌ 需要注意的地方：</strong>错误点、正确写法和详细解释</li>
+                            <li><strong>💡 更自然的说法：</strong>让你的日语更地道的建议</li>
+                        </ul>
+                        <p>得分 ≥ 8 分可以选择<strong>「加大难度」</strong>挑战更难题目；得分较低可以选择<strong>「换道同类题再练」</strong>巩固薄弱语法，或<strong>「修改重答」</strong>同一道题。</p>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <div class="guide-step-num">5</div>
+                    <div class="guide-step-content">
+                        <h4>获取当日学习总结报告</h4>
+                        <p>完成全部题目后，系统会自动生成：</p>
+                        <ul>
+                            <li><strong>统计仪表盘：</strong>答题数、平均分、高分题、薄弱项一目了然</li>
+                            <li><strong>复习笔记（Markdown）：</strong>包含所有语法点、正确/错误分析和改进建议</li>
+                            <li>点击「下载 .md 文件」可将笔记保存到本地，方便日后复习</li>
+                            <li>可选择将本次语法点<strong>保存到知识库</strong>，系统会根据艾宾浩斯记忆曲线自动安排复习</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="privacy-footer">
+                <button id="btn-guide-close" class="btn btn-primary">我已了解，开始使用</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 弹窗：开发路线图 ==================== -->
+    <div id="modal-roadmap" class="modal-overlay" style="display: none;">
+        <div class="modal-card privacy-modal-card">
+            <div class="privacy-header">
+                <h2 class="modal-title"><i data-lucide="map" style="width:24px;height:24px;color:var(--color-primary)"></i> 开发路线图</h2>
+                <p class="privacy-update">以下功能正在规划中，敬请期待</p>
+            </div>
+
+            <div class="privacy-body">
+                <div class="roadmap-grid">
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="book-open" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>阅读闯关</strong>
+                            <p>AI 提取文章语法点，生成阅读理解题</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="mic" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>影子跟读</strong>
+                            <p>浏览器语音识别 + AI 发音评估</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="message-circle" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>AI 场景对话</strong>
+                            <p>限定场景的日语对话练习，AI 即时纠错</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="wand" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>AI 笔记助手</strong>
+                            <p>自动整理杂乱笔记为标准格式，提取词汇</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="library" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>个性化词库</strong>
+                            <p>内置 JLPT N5-N1 词汇，标记掌握度</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="flame" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>每日挑战</strong>
+                            <p>每天自动推送薄弱项挑战题</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="package" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>Anki 导出</strong>
+                            <p>错题 / 词库一键导出 .apkg 卡组</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="cpu" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>多模型支持</strong>
+                            <p>接入 OpenAI / Claude / 通义千问</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>数据可视化</strong>
+                            <p>正确率趋势图 + GitHub 风格热力图</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="printer" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>生成练习卷</strong>
+                            <p>排版导出 A4 PDF，离线打印练习</p>
+                        </div>
+                    </div>
+                    <div class="roadmap-card">
+                        <div class="roadmap-card-icon"><i data-lucide="share-2" style="width:20px;height:20px"></i></div>
+                        <div class="roadmap-card-text">
+                            <strong>打卡分享</strong>
+                            <p>生成精美学习海报，一键分享社交平台</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="privacy-footer">
+                <button id="btn-roadmap-close" class="btn btn-primary">关闭</button>
             </div>
         </div>
     </div>
