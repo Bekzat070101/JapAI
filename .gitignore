@@ -1,0 +1,33 @@
+# Environment variables (production secrets)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# User data (generated at runtime, may contain personal info)
+config.json
+progress.json
+learned_content.json
+vocabulary.json
+wrong_book.json
+history/
+output/
+
+# Internal dev files (kept local, not published)
+devlog/
+docs/
+CLAUDE.md
+static/logo.psd
+
+# Build output
+build/
+dist/
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
