@@ -7,7 +7,7 @@
 // ========== ClickSpark — 点击火花粒子效果 ==========
 function createClickSpark(options = {}) {
     const {
-        sparkColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#0D9488',
+        sparkColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#F00000',
         sparkSize = 10,
         sparkRadius = 20,
         sparkCount = 8,
@@ -113,11 +113,11 @@ function createShinyText(element, options = {}) {
 
     element.style.display = 'inline-block';
     element.style.background = `linear-gradient(110deg,
-        var(--text-primary, #134E4A) 35%,
-        var(--color-primary-light, #CCFBF1) 42%,
-        var(--color-primary, #0D9488) 45%,
-        var(--color-primary-light, #CCFBF1) 48%,
-        var(--text-primary, #134E4A) 55%
+        var(--text-primary, #332F3A) 35%,
+        var(--color-primary-light, #FFEBEB) 42%,
+        var(--color-primary, #F00000) 45%,
+        var(--color-primary-light, #FFEBEB) 48%,
+        var(--text-primary, #332F3A) 55%
     )`;
     element.style.backgroundSize = '200% 100%';
     element.style.webkitBackgroundClip = 'text';
@@ -190,7 +190,7 @@ function springPress(element) {
 function createFloatingParticles(container, options = {}) {
     const {
         count = 15,
-        color = 'rgba(13, 148, 136, 0.12)',
+        color = 'rgba(240, 0, 0, 0.12)',
         minSize = 4,
         maxSize = 12,
         speed = 1,
@@ -242,12 +242,12 @@ function createFloatingParticles(container, options = {}) {
 function borderGlow(element, options = {}) {
     const {
         edgeSensitivity = 30,
-        glowColor = '173 80 40',   // KOTOBA·AI teal HSL
+        glowColor = '0 100 47',   // KOTOBA·AI brand red HSL
         glowRadius = 30,
         glowIntensity = 1.0,
         coneSpread = 25,
         animated = false,
-        colors = ['rgba(13,148,136,0.9)', 'rgba(45,212,191,0.9)', 'rgba(217,119,6,0.9)'],
+        colors = ['rgba(240,0,0,0.9)', 'rgba(255,138,101,0.9)', 'rgba(255,209,204,0.9)'],
         fillOpacity = 0.35,
     } = options;
 
@@ -364,7 +364,7 @@ function initBorderGlowCards() {
             edgeSensitivity: 30,
             glowRadius: 30,
             glowIntensity: 1.0,
-            colors: ['rgba(13,148,136,0.9)', 'rgba(45,212,191,0.9)', 'rgba(217,119,6,0.9)'],
+            colors: ['rgba(240,0,0,0.9)', 'rgba(255,138,101,0.9)', 'rgba(255,209,204,0.9)'],
             animated,
         });
     });
@@ -378,11 +378,11 @@ function createFloatingOrbs(container, options = {}) {
         maxSize = 400,
         speed = 1,
         colors = [
-            'rgba(13,148,136,0.15)',
-            'rgba(45,212,191,0.10)',
-            'rgba(217,119,6,0.08)',
-            'rgba(13,148,136,0.12)',
-            'rgba(59,130,246,0.06)',
+            'rgba(240,0,0,0.15)',
+            'rgba(255,138,101,0.10)',
+            'rgba(255,209,204,0.08)',
+            'rgba(240,0,0,0.12)',
+            'rgba(255,179,148,0.06)',
         ],
     } = options;
 

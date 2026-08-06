@@ -31,6 +31,42 @@ function escapeHtml(s) {
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+// --- 界面缩放（Ctrl + / - / 0，和浏览器一致）---
+function initZoom() {
+    const root = document.documentElement;
+    let scale = parseFloat(localStorage.getItem("kotoba-ui-scale") || "1");
+    // 限制范围
+    scale = Math.max(0.5, Math.min(2.5, scale));
+    root.style.setProperty("--ui-scale", scale);
+    localStorage.setItem("kotoba-ui-scale", scale);
+
+    document.addEventListener("keydown", (e) => {
+        if (!e.ctrlKey && !e.metaKey) return;
+        // 输入框内不拦截
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+
+        let target = null;
+        if (e.key === "=" || e.key === "+" || e.code === "Equal" || e.code === "NumpadAdd") {
+            // Ctrl+= 放大（按 shift 出的 + 也识别）
+            target = Math.min(2.5, scale + 0.1);
+        } else if (e.key === "-" || e.code === "Minus" || e.code === "NumpadSubtract") {
+            // Ctrl+- 缩小
+            target = Math.max(0.5, scale - 0.1);
+        } else if (e.key === "0" || e.code === "Digit0" || e.code === "Numpad0") {
+            // Ctrl+0 重置
+            target = 1;
+        }
+
+        if (target !== null) {
+            e.preventDefault();
+            scale = Math.round(target * 10) / 10; // 一位小数精度
+            root.style.setProperty("--ui-scale", scale);
+            localStorage.setItem("kotoba-ui-scale", scale);
+        }
+    });
+}
+initZoom();
+
 // --- API 封装 ---
 async function api(url, options = {}) {
     try {
@@ -244,7 +280,6 @@ async function initMainScreen() {
 function showMainScreen() {
     showScreen("main");
     setDockActive("main");
-    setDockActive("main");
 
     // 加载教材列表
     loadTextbookOptions();
@@ -288,15 +323,6 @@ function showMainScreen() {
 
     // 开始训练
     $("#btn-start").onclick = startTraining;
-
-    // 错题本
-    $("#btn-goto-wrong").onclick = initWrongBookScreen;
-
-    // 历史记录
-    $("#btn-goto-history").onclick = initHistoryScreen;
-
-    // 设置 → 跳转到专用设置页面
-    $("#btn-goto-settings").onclick = showSettingsScreen;
 }
 
 async function startTraining() {
@@ -801,7 +827,7 @@ function renderEssayQuestion(essay) {
 
     // 切换为作文模式
     const steps = $("#quiz-steps");
-    if (steps) steps.innerHTML = '<span class="quiz-step-dot current" style="width:14px;height:14px;box-shadow:0 0 0 4px rgba(13,148,136,0.2)"></span>';
+    if (steps) steps.innerHTML = '<span class="quiz-step-dot current" style="width:14px;height:14px;box-shadow:0 0 0 4px rgba(240,0,0,0.18)"></span>';
     $("#progress-score").textContent = `覆盖 ${essay.grammar_points_covered?.length || 0} 个语法点`;
 
     hide($("#badge-extra"));
@@ -1549,7 +1575,7 @@ function init() {
     // ClickSpark — 全局点击火花
     if (typeof createClickSpark === 'function') {
         clickSparkInstance = createClickSpark({
-            sparkColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#0D9488',
+            sparkColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#F00000',
             sparkCount: 6,
             sparkRadius: 18,
             duration: 350,
@@ -1614,45 +1640,61 @@ function initDock() {
         item.addEventListener('click', () => {
             const screen = item.dataset.screen;
             switch (screen) {
-                case 'guide':
-                    // 直接显示引导页，不检查 API Key
-                    showScreen("guide");
-                    setDockActive("guide");
-                    setDockActive("guide");
-                    $("#btn-guide-start").onclick = () => initSetupScreen();
-                    break;
+                case 'guide': showGuideScreen(); break;
                 case 'main': showMainScreen(); break;
                 case 'settings': showSettingsScreen(); break;
                 case 'profile': showProfileScreen(); break;
             }
-            // 更新激活状态
-            items.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
         });
     });
 }
 
+// 首页（引导页）
+function showGuideScreen() {
+    showScreen("guide");
+    setDockActive("guide");
+    $("#btn-guide-start").onclick = async () => {
+        const data = await loadConfig();
+        if (data && data.has_api_key) {
+            initMainScreen();
+        } else {
+            initSetupScreen();
+        }
+    };
+}
+
 // 设置页面
 function showSettingsScreen() {
-    showScreen("setup");
+    showScreen("settings");
     setDockActive("settings");
 
     // hero 区域
-    $(".setup-icon-wrap").innerHTML = '<i data-lucide="settings" style="width:40px;height:40px"></i>';
-    $(".setup-hero h1").textContent = "设置";
-    $(".setup-desc").textContent = "";
+    const heroIcon = $("#screen-settings .setup-icon-wrap");
+    if (heroIcon) heroIcon.innerHTML = '<i data-lucide="settings" style="width:40px;height:40px"></i>';
+    const heroTitle = $("#screen-settings .setup-hero h1");
+    if (heroTitle) heroTitle.textContent = "设置";
+    const heroDesc = $("#screen-settings .setup-desc");
+    if (heroDesc) heroDesc.textContent = "管理 API Key、模型与外观";
 
-    const card = $(".setup-card");
+    const card = $("#screen-settings .setup-card");
+    if (!card) return;
     card.innerHTML = `
         <div class="settings-list">
             <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:var(--space-md);padding-top:var(--space-sm)">
-                <div class="settings-item-title" style="margin-bottom:2px"><i data-lucide="key" style="width:18px;height:18px;color:var(--primary)"></i> DeepSeek API Key</div>
+                <div class="settings-item-title" style="margin-bottom:2px"><i data-lucide="key" style="width:18px;height:18px;color:var(--color-primary)"></i> DeepSeek API Key</div>
                 <input type="password" id="settings-apikey-input" class="input" placeholder="sk-..." autocomplete="off" style="width:100%">
                 <div class="settings-item-desc">在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 平台</a> 获取，Key 仅保存在本地，不会上传</div>
                 <div style="display:flex;gap:8px;justify-content:flex-end">
                     <button class="btn btn-primary btn-sm" id="btn-save-apikey">保存</button>
                 </div>
                 <p id="apikey-error" class="error-text" style="display:none;"></p>
+            </div>
+            <div class="settings-item">
+                <div class="settings-item-info">
+                    <div class="settings-item-title"><i data-lucide="cpu" style="width:18px;height:18px"></i> 使用模型</div>
+                    <div class="settings-item-desc">当前仅支持 DeepSeek V4</div>
+                </div>
+                <span style="font-size:12px;font-weight:700;color:var(--color-primary);background:var(--color-primary-tint,#FFEBEB);padding:3px 12px;border-radius:var(--radius-full);white-space:nowrap">开发中</span>
             </div>
             <div class="settings-item">
                 <div class="settings-item-info">
@@ -1722,13 +1764,13 @@ function showSettingsScreen() {
         }
     };
 
-    // 主题切换按钮
+    // 主题切换按钮（作用域限定在设置页）
     const currentTheme = getTheme();
-    document.querySelectorAll('.theme-option').forEach(btn => {
+    document.querySelectorAll('#screen-settings .theme-option').forEach(btn => {
         if (btn.dataset.themeVal === currentTheme) btn.classList.add('active');
         btn.onclick = () => {
             setTheme(btn.dataset.themeVal);
-            document.querySelectorAll('.theme-option').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#screen-settings .theme-option').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         };
     });
@@ -1759,86 +1801,110 @@ function showSettingsScreen() {
     const roadmapBtn = $("#settings-roadmap");
     if (roadmapBtn) roadmapBtn.onclick = showRoadmapModal;
 
+    // 版本行
+    const versionRow = document.createElement("div");
+    versionRow.className = "settings-item";
+    versionRow.style.borderTop = "1px solid var(--border-light)";
+    versionRow.style.justifyContent = "center";
+    versionRow.innerHTML = `
+        <div class="settings-item-info" style="align-items:center">
+            <span style="font-size:12px;color:var(--text-tertiary)">KOTOBA·AI v1.1.0-beta · MIT License</span>
+        </div>
+    `;
+    card.appendChild(versionRow);
+
     // 返回按钮（不在 card 内，始终安全）
-    const skipBtn = $("#btn-skip-setup");
-    if (skipBtn) {
-        skipBtn.style.display = "";
-        skipBtn.textContent = "← 返回";
-        skipBtn.onclick = showMainScreen;
+    const backBtn = $("#btn-settings-back");
+    if (backBtn) {
+        backBtn.style.display = "";
+        backBtn.onclick = showMainScreen;
     }
 }
 
 // 个人页面
 function showProfileScreen() {
-    showScreen("setup");
+    showScreen("profile");
+    setDockActive("profile");
 
-    // 先设置 hero 区域（不在 card 内，始终安全）
-    $(".setup-icon-wrap").innerHTML = '<i data-lucide="user" style="width:40px;height:40px"></i>';
-    $(".setup-hero h1").textContent = "个人";
-    $(".setup-desc").textContent = "";
+    // hero 区域（作用域限定在个人页）
+    const heroIcon = $("#screen-profile .setup-icon-wrap");
+    if (heroIcon) heroIcon.innerHTML = '<i data-lucide="user" style="width:40px;height:40px"></i>';
+    const heroTitle = $("#screen-profile .setup-hero h1");
+    if (heroTitle) heroTitle.textContent = "个人中心";
+    const heroDesc = $("#screen-profile .setup-desc");
+    if (heroDesc) heroDesc.textContent = "打卡日历 · 复习计划 · 学习数据";
 
     // 替换 card 内容（先替换，再操作，避免访问已销毁元素）
-    const card = $(".setup-card");
+    const card = $("#screen-profile .setup-card");
+    if (!card) return;
     card.innerHTML = `
-        <!-- 打卡日历 -->
-        <div class="checkin-calendar" id="checkin-calendar">
-            <div class="checkin-cal-header">
-                <div class="checkin-stats-row">
-                    <div class="checkin-stat-badge">
-                        <i data-lucide="flame" style="width:22px;height:22px;color:var(--color-warning)"></i>
-                        <div class="checkin-stat-info">
-                            <span class="checkin-stat-num" id="cal-streak-num">--</span>
-                            <span class="checkin-stat-label">连续学习</span>
+        <div class="profile-layout">
+            <div class="profile-main">
+                <!-- 打卡日历 -->
+                <div class="checkin-calendar" id="checkin-calendar">
+                    <div class="checkin-cal-header">
+                        <div class="checkin-stats-row">
+                            <div class="checkin-stat-badge">
+                                <i data-lucide="flame" style="width:22px;height:22px;color:var(--color-warning)"></i>
+                                <div class="checkin-stat-info">
+                                    <span class="checkin-stat-num" id="cal-streak-num">--</span>
+                                    <span class="checkin-stat-label">连续学习</span>
+                                </div>
+                            </div>
+                            <div class="checkin-stat-badge">
+                                <i data-lucide="calendar-check" style="width:22px;height:22px;color:var(--color-primary)"></i>
+                                <div class="checkin-stat-info">
+                                    <span class="checkin-stat-num" id="cal-month-num">--</span>
+                                    <span class="checkin-stat-label">本月累计</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkin-month-nav">
+                            <button class="checkin-nav-btn" id="cal-prev-month"><i data-lucide="chevron-left" style="width:16px;height:16px"></i></button>
+                            <span class="checkin-month-label" id="cal-month-label">2026年7月</span>
+                            <button class="checkin-nav-btn" id="cal-next-month"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></button>
                         </div>
                     </div>
-                    <div class="checkin-stat-badge">
-                        <i data-lucide="calendar-check" style="width:22px;height:22px;color:var(--color-primary)"></i>
-                        <div class="checkin-stat-info">
-                            <span class="checkin-stat-num" id="cal-month-num">--</span>
-                            <span class="checkin-stat-label">本月累计</span>
-                        </div>
+                    <div class="checkin-weekdays">
+                        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                    </div>
+                    <div class="checkin-grid" id="checkin-grid"></div>
+                </div>
+
+                <!-- 复习计划 -->
+                <div class="review-plan" id="review-plan">
+                    <div class="review-plan-header">
+                        <i data-lucide="brain" style="width:18px;height:18px;color:var(--color-primary)"></i>
+                        <span>复习计划</span>
+                        <span class="review-plan-badge" id="review-plan-badge" style="display:none"></span>
+                    </div>
+                    <div class="review-plan-list" id="review-plan-list">
+                        <p class="review-plan-empty">加载中...</p>
                     </div>
                 </div>
-                <div class="checkin-month-nav">
-                    <button class="checkin-nav-btn" id="cal-prev-month"><i data-lucide="chevron-left" style="width:16px;height:16px"></i></button>
-                    <span class="checkin-month-label" id="cal-month-label">2026年7月</span>
-                    <button class="checkin-nav-btn" id="cal-next-month"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></button>
-                </div>
             </div>
-            <div class="checkin-weekdays">
-                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-            </div>
-            <div class="checkin-grid" id="checkin-grid"></div>
-        </div>
 
-        <!-- 复习计划 -->
-        <div class="review-plan" id="review-plan">
-            <div class="review-plan-header">
-                <i data-lucide="brain" style="width:18px;height:18px;color:var(--color-primary)"></i>
-                <span>复习计划</span>
-                <span class="review-plan-badge" id="review-plan-badge" style="display:none"></span>
-            </div>
-            <div class="review-plan-list" id="review-plan-list">
-                <p class="review-plan-empty">加载中...</p>
-            </div>
-        </div>
-
-        <div style="border-top: 1px solid var(--border-light); margin: var(--space-lg) 0;"></div>
-
-        <div class="settings-list">
-            <div class="settings-item clickable" id="profile-wrong">
-                <div class="settings-item-info">
-                    <div class="settings-item-title"><i data-lucide="edit-3" style="width:18px;height:18px"></i> 错题本</div>
-                    <div class="settings-item-desc">查看和复习做错的题目</div>
+            <div class="profile-side">
+                <div class="card profile-entry" id="profile-wrong">
+                    <div class="guide-bento-icon" style="--glow:var(--color-primary)">
+                        <i data-lucide="edit-3" style="width:22px;height:22px"></i>
+                    </div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">错题本</div>
+                        <div class="settings-item-desc">查看和复习做错的题目</div>
+                    </div>
+                    <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
                 </div>
-                <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
-            </div>
-            <div class="settings-item clickable" id="profile-history">
-                <div class="settings-item-info">
-                    <div class="settings-item-title"><i data-lucide="clipboard-list" style="width:18px;height:18px"></i> 历史记录</div>
-                    <div class="settings-item-desc">查看过往练习记录</div>
+                <div class="card profile-entry" id="profile-history">
+                    <div class="guide-bento-icon" style="--glow:var(--color-info)">
+                        <i data-lucide="clipboard-list" style="width:22px;height:22px"></i>
+                    </div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">历史记录</div>
+                        <div class="settings-item-desc">查看过往练习记录</div>
+                    </div>
+                    <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
                 </div>
-                <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
             </div>
         </div>
     `;
@@ -1850,15 +1916,16 @@ function showProfileScreen() {
     // 加载复习计划
     loadReviewPlan();
 
-    $("#profile-wrong").onclick = initWrongBookScreen;
-    $("#profile-history").onclick = initHistoryScreen;
+    const wrongEntry = $("#screen-profile #profile-wrong");
+    if (wrongEntry) wrongEntry.onclick = initWrongBookScreen;
+    const historyEntry = $("#screen-profile #profile-history");
+    if (historyEntry) historyEntry.onclick = initHistoryScreen;
 
     // 返回按钮（不在 card 内，始终安全）
-    const skipBtn = $("#btn-skip-setup");
-    if (skipBtn) {
-        skipBtn.style.display = "";
-        skipBtn.textContent = "← 返回";
-        skipBtn.onclick = showMainScreen;
+    const backBtn = $("#btn-profile-back");
+    if (backBtn) {
+        backBtn.style.display = "";
+        backBtn.onclick = showMainScreen;
     }
 }
 

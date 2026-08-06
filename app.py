@@ -834,5 +834,6 @@ if __name__ == "__main__":
 
     Timer(0.5, start_flask).start()
     webview.create_window("KOTOBA·AI 言葉", "http://127.0.0.1:5000",
-                          width=1200, height=800, min_size=(900, 600))
+                          width=1200, height=800, min_size=(900, 600),
+                          resizable=True)
     webview.start()
