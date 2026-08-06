@@ -1808,7 +1808,7 @@ function showSettingsScreen() {
     versionRow.style.justifyContent = "center";
     versionRow.innerHTML = `
         <div class="settings-item-info" style="align-items:center">
-            <span style="font-size:12px;color:var(--text-tertiary)">KOTOBA·AI v1.1.0-beta · MIT License</span>
+            <span style="font-size:12px;color:var(--text-tertiary)">KOTOBA·AI v3.0.0-beta · 黏土更新 · MIT License</span>
         </div>
     `;
     card.appendChild(versionRow);
